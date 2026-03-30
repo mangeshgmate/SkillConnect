@@ -37,7 +37,7 @@ const Layout = ({ children }) => {
         {children}
       </div>
 
-      <footer className="text-white flex flex-col items-center justify-center bg-base">
+      <footer className="text-white flex flex-col min-h-40 items-center justify-center bg-base">
 
         <div className="border-t border-t-muted border-b border-b-muted w-full flex flex-col md:flex-row items-center md:items-start justify-between p-10 gap-8">
 
@@ -67,7 +67,7 @@ const Layout = ({ children }) => {
           {/* Hackathon Section */}
           <div className="small-6 large-3">
             <nav>
-              <h4 className="text-lg font-semibold mb-3">Hackathons</h4>
+              <h4 className="text-sm font-semibold mb-3">Hackathons</h4>
               <ul>
                 <li>
                   <Link to="/explore-hackathons" className="hover:text-primary transition">
@@ -104,7 +104,7 @@ const Layout = ({ children }) => {
           {/* Social Links */}
           <div className="w-full md:w-1/4">
             <nav>
-              <h4 className="text-lg font-semibold text-white mb-4">Connect</h4>
+              <h4 className="text-md font-semibold text-white mb-4">Connect</h4>
 
               <ul className="space-y-4">
 

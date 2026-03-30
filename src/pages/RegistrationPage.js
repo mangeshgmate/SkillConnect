@@ -19,7 +19,7 @@ const RegistrationPage = () => {
   };
 
   return (
-    <div className="auth-container bg-base min-h-screen flex items-center justify-center">
+    <div className="auth-container bg-base  flex items-center justify-center">
       
       <div className="reg-card flex flex-col items-center justify-center text-white">
         
@@ -27,7 +27,7 @@ const RegistrationPage = () => {
           Hackathon Registration
         </h2>
 
-        <div className="border border-primary p-6 rounded-lg bg-surface">
+        <div className="border border-primary p-6 rounded-lg bg-base">
 
           <form
             onSubmit={handleSubmit}
@@ -44,7 +44,7 @@ const RegistrationPage = () => {
                   setFormData({ ...formData, name: e.target.value })
                 }
                 placeholder="John Doe"
-                className="p-2 rounded border focus:outline-none focus:ring-2 focus:ring-primary"
+                className="p-2 rounded border focus:outline-none focus:ring-2 bg-base focus:ring-primary"
               />
             </div>
 
@@ -58,7 +58,7 @@ const RegistrationPage = () => {
                   setFormData({ ...formData, email: e.target.value })
                 }
                 placeholder="john@example.com"
-                className="p-2 rounded border focus:outline-none focus:ring-2 focus:ring-primary"
+                className="p-2 rounded border focus:outline-none focus:ring-2 bg-base focus:ring-primary"
               />
             </div>
 
@@ -74,7 +74,7 @@ const RegistrationPage = () => {
                   setFormData({ ...formData, github: e.target.value })
                 }
                 placeholder="https://github.com/username"
-                className="p-2 rounded border focus:outline-none focus:ring-2 focus:ring-primary"
+                className="p-2 rounded border focus:outline-none focus:ring-2 bg-base focus:ring-primary"
               />
             </div>
 

@@ -14,7 +14,6 @@ export default function Navbar() {
 
   // 🔥 Get logged in user
   const user = JSON.parse(localStorage.getItem("user"));
-  console.log("USER:", user);
 
   const menuItems = [
     { name: "My Profile", path: "/profile" },

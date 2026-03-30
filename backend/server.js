@@ -1,6 +1,6 @@
 import express from "express";
 import cors from "cors";
-import { MongoClient, ObjectId} from "mongodb";
+import { MongoClient, ObjectId } from "mongodb";
 import dotenv from "dotenv";
 import axios from "axios";
 
@@ -417,14 +417,15 @@ app.get("/api/users", async (req, res) => {
 });
 
 // Teams
+// Replace the existing /api/teams GET
 app.get("/api/teams", async (req, res) => {
   try {
-    const teams = await teamsCollection.find().toArray();
+    const { hackathonId } = req.query;
+    const query = hackathonId ? { hackathonId } : {};
+    const teams = await teamsCollection.find(query).toArray();
     res.json(teams);
   } catch (err) {
-    res.status(500).json({
-      message: "Error fetching teams"
-    });
+    res.status(500).json({ message: "Error fetching teams" });
   }
 });
 
@@ -474,6 +475,94 @@ app.get("/api/notifications/:userId", async (req, res) => {
 });
 
 
+// Add this after your /api/users route
+app.get("/api/me", async (req, res) => {
+  try {
+    const email = req.query.email; // e.g. /api/me?email=user@example.com
+    if (!email) {
+      return res.status(400).json({ success: false, message: "Email required" });
+    }
+
+    const user = await usersCollection.findOne({ email });
+    if (!user) {
+      return res.status(404).json({ success: false, message: "User not found" });
+    }
+
+    res.json(user);
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+});
+
+app.post("/api/teams/:id/join", async (req, res) => {
+  try {
+    const { userId } = req.body;
+    await teamsCollection.updateOne(
+      { _id: new ObjectId(req.params.id) },
+      { $addToSet: { members: userId } }
+    );
+    res.json({ success: true });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+});
+
+// Add this in server.js
+app.post("/api/teams", async (req, res) => {
+  try {
+    const { teamName, projectName, description, requiredSkills, maxMembers, role, hackathonId, createdBy } = req.body;
+
+    const newTeam = {
+      teamName,
+      projectName,
+      description,
+      requiredSkills: requiredSkills.split(",").map(s => s.trim()),
+      maxMembers,
+      role,
+      hackathonId,
+      createdBy,
+      members: [createdBy],
+      createdAt: new Date()
+    };
+
+    await teamsCollection.insertOne(newTeam);
+    res.status(201).json({ success: true, data: newTeam });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+});
+
+
+// Hackathon registration
+app.post("/api/hackathons/:id/register", async (req, res) => {
+  try {
+    const { userId } = req.body;
+    const hackathonId = req.params.id;
+
+    // Guard against undefined/invalid IDs
+    if (!hackathonId || hackathonId === "undefined") {
+      return res.status(400).json({ success: false, message: "Invalid hackathon ID" });
+    }
+    if (!userId || userId === "undefined") {
+      return res.status(400).json({ success: false, message: "Invalid user ID" });
+    }
+
+    await hackathonsCollection.updateOne(
+      { _id: new ObjectId(hackathonId) },
+      { $addToSet: { participants: userId } }  // store userId as string, no ObjectId wrap
+    );
+
+    await usersCollection.updateOne(
+      { _id: new ObjectId(userId) },           // userId from MongoDB is already a valid hex string
+      { $addToSet: { hackathons: hackathonId } }
+    );
+
+    res.json({ success: true, message: "Registered for hackathon" });
+  } catch (err) {
+    console.error("Register error:", err.message);
+    res.status(500).json({ success: false, message: err.message });
+  }
+});
 // -----------------------------
 // Server Start
 // -----------------------------

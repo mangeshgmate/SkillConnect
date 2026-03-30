@@ -6,7 +6,7 @@ import Register from './pages/Register';
 import Home from './pages/Home';
 import Layout from './Layout';
 import './index.css'
-import Team from './pages/Teams';
+import Discover from './pages/Teams';
 import { useState } from 'react';
 import Profile from './pages/Profile';
 import Explore from './pages/Explore';
@@ -43,7 +43,7 @@ function App() {
 
               <Route path="/hackathon-register" element={
                 <ProtectedRoute user={user}>
-                  <RegistrationPage />
+                  <Discover />
                 </ProtectedRoute>} />
 
               <Route path="/profile" element={
@@ -56,6 +56,12 @@ function App() {
                   <Explore />
                 </ProtectedRoute>} />
 
+              <Route path="/discover/:hackathonId" element={
+                <ProtectedRoute user={user}>
+                  <Discover />
+                </ProtectedRoute>
+              } />
+
               <Route path="/host" element={
                 <ProtectedRoute user={user}>
                   <Login />
@@ -65,14 +71,14 @@ function App() {
 
               <Route path="/team" element={
                 <ProtectedRoute user={user}>
-                  <Team />
+                  <Discover />
                 </ProtectedRoute>
               } />
 
 
               <Route path="/about" element={<About />} />
               <Route path="/contact" element={<Contact />} />
-              <Route path='/explore-hackathons' element={<Hackathon/>}/>
+              <Route path='/explore-hackathons' element={<Hackathon />} />
             </Routes>
           </Layout>
         </Router>
