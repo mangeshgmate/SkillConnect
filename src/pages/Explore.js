@@ -16,7 +16,10 @@ const Explore = () => {
   const [selectedUser, setSelectedUser] = useState(null);
   const [isUserModalOpen, setIsUserModalOpen] = useState(false);
 
-  // 🔥 Fetch Users
+  // Get logged in user from localStorage
+  const currentUser = JSON.parse(localStorage.getItem("user"));
+
+  // Fetch Users
   useEffect(() => {
     const fetchUsers = async () => {
       try {
@@ -31,7 +34,7 @@ const Explore = () => {
     fetchUsers();
   }, []);
 
-  // 🔥 Toggle Role
+  // Toggle Role
   const toggleRole = (role) => {
     setSelectedRoles((prev) =>
       prev.includes(role)
@@ -40,7 +43,7 @@ const Explore = () => {
     );
   };
 
-  // 🔥 Toggle Skill
+  // Toggle Skill
   const toggleSkill = (skill) => {
     setSelectedSkills((prev) =>
       prev.includes(skill)
@@ -49,25 +52,22 @@ const Explore = () => {
     );
   };
 
-  // 🔥 Apply Filters
+  // Apply Filters
   const applyFilters = () => {
     let temp = [...users];
 
-    // Search
     if (search) {
       temp = temp.filter((user) =>
         user.name.toLowerCase().includes(search.toLowerCase())
       );
     }
 
-    // Role Filter
     if (selectedRoles.length > 0) {
       temp = temp.filter((user) =>
         user.roles?.some((r) => selectedRoles.includes(r.role))
       );
     }
 
-    // Skills Filter
     if (selectedSkills.length > 0) {
       temp = temp.filter((user) =>
         [
@@ -81,7 +81,7 @@ const Explore = () => {
     setFilteredUsers(temp);
   };
 
-  // 🔥 Reset Filters
+  // Reset Filters
   const resetFilters = () => {
     setSelectedRoles([]);
     setSelectedSkills([]);
@@ -94,34 +94,43 @@ const Explore = () => {
       const res = await axios.get(
         `http://localhost:5000/api/users?email=${email}`
       );
-
       setSelectedUser(res.data);
       setIsUserModalOpen(true);
-
     } catch (err) {
       console.error(err);
     }
   };
 
-  const sendRequest = async (toUserId) => {
+  const sendRequest = async (toUserId, toUserName) => {
     try {
+      if (!currentUser) {
+        alert("You must be logged in to connect.");
+        return;
+      }
+
+      // Fetch full current user to get name and _id
+      const meRes = await axios.get(
+        `http://localhost:5000/api/me?email=${currentUser.email}`
+      );
+      const me = meRes.data;
+
       await axios.post("http://localhost:5000/api/request/send", {
-        fromUserId: "user1", // 🔥 replace later with logged-in user
-        toUserId,
-        type: "connection"
+        fromUserId: me._id.toString(),
+        fromUserName: me.name,
+        toUserId: toUserId.toString(),
       });
 
-      alert("Connection request sent 🚀");
-
+      alert(`Connection request sent to ${toUserName} 🚀`);
     } catch (err) {
       console.error(err);
+      alert("Failed to send request.");
     }
   };
 
   return (
     <div className="text-white p-5">
 
-      {/* 🔍 Search + Filter */}
+      {/* Search + Filter */}
       <div className="flex w-full items-center justify-center gap-5">
         <div className="bg-base w-[50%]">
           <input
@@ -139,7 +148,7 @@ const Explore = () => {
         />
       </div>
 
-      {/* 🔽 FILTER PANEL */}
+      {/* Filter Panel */}
       {isFilterOpen && (
         <div className="absolute border-2 border-muted bg-base w-full z-50 mt-4 p-6 shadow-lg">
           <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
@@ -173,11 +182,11 @@ const Explore = () => {
                     <span
                       key={skill}
                       onClick={() => toggleSkill(skill)}
-                      className={`border px-3 py-1 rounded-full cursor-pointer
-                        ${selectedSkills.includes(skill)
+                      className={`border px-3 py-1 rounded-full cursor-pointer ${
+                        selectedSkills.includes(skill)
                           ? "bg-primary text-black"
                           : ""
-                        }`}
+                      }`}
                     >
                       {skill}
                     </span>
@@ -206,13 +215,12 @@ const Explore = () => {
         </div>
       )}
 
-      {/* 🔥 RESULTS */}
+      {/* Results */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-10">
         {filteredUsers.map((user, index) => (
           <div
             key={index}
-            className="bg-gradient-to-br from-base to-[#1a1a1a] border border-[#2a2a2a] 
-                 p-6 rounded-2xl shadow-xl hover:scale-[1.03] transition-all duration-300"
+            className="bg-gradient-to-br from-base to-[#1a1a1a] border border-[#2a2a2a] p-6 rounded-2xl shadow-xl hover:scale-[1.03] transition-all duration-300"
           >
             {/* Header */}
             <div className="flex items-center gap-4 mb-4">
@@ -221,23 +229,15 @@ const Explore = () => {
                 alt="avatar"
                 className="w-14 h-14 rounded-full border-2 border-primary"
               />
-
               <div>
-                <h2 className="text-lg font-bold text-white">
-                  {user.name}
-                </h2>
-                <p className="text-xs text-gray-400">
-                  {user.email}
-                </p>
+                <h2 className="text-lg font-bold text-white">{user.name}</h2>
+                <p className="text-xs text-gray-400">{user.email}</p>
               </div>
             </div>
 
             {/* Skills */}
             <div className="mt-3">
-              <p className="text-sm font-semibold text-primary mb-1">
-                Skills
-              </p>
-
+              <p className="text-sm font-semibold text-primary mb-1">Skills</p>
               <div className="flex flex-wrap gap-2">
                 {[
                   ...(user.skills?.languages || []),
@@ -245,8 +245,7 @@ const Explore = () => {
                 ].slice(0, 6).map((skill, i) => (
                   <span
                     key={i}
-                    className="px-2 py-1 text-xs rounded-full 
-                         bg-[#2b2b2b] text-white border border-[#3a3a3a]"
+                    className="px-2 py-1 text-xs rounded-full bg-[#2b2b2b] text-white border border-[#3a3a3a]"
                   >
                     {skill}
                   </span>
@@ -256,20 +255,15 @@ const Explore = () => {
 
             {/* Top Role */}
             <div className="mt-4">
-              <p className="text-sm font-semibold text-primary">
-                Top Role
-              </p>
-
+              <p className="text-sm font-semibold text-primary">Top Role</p>
               <p className="text-white text-sm mt-1">
                 {user.roles?.[0]?.role || "Not analyzed"}
               </p>
             </div>
 
-            {/* Footer badge */}
+            {/* Footer */}
             <div className="mt-5 flex justify-between items-center">
-              <span className="text-xs text-gray-400">
-                🚀 Ready for Hackathon
-              </span>
+              <span className="text-xs text-gray-400">🚀 Ready for Hackathon</span>
 
               <button
                 onClick={() => handleUserProfile(user.email)}
@@ -277,23 +271,27 @@ const Explore = () => {
               >
                 View Profile
               </button>
-              {isUserModalOpen && selectedUser && (
-                <UserModal
-                  user={selectedUser}
-                  onClose={() => setIsUserModalOpen(false)}
-                />
-              )}
-              {/* 🔥 Connect Button */}
+
+              {/* Connect Button */}
               <button
-                onClick={() => sendRequest(user._id)}
+                onClick={() => sendRequest(user._id, user.name)}
                 className="text-xs px-3 py-1 rounded-full border border-primary text-primary hover:bg-primary hover:text-black transition"
               >
                 Connect
               </button>
             </div>
+
           </div>
         ))}
       </div>
+
+      {/* User Modal — moved outside the map */}
+      {isUserModalOpen && selectedUser && (
+        <UserModal
+          user={selectedUser}
+          onClose={() => setIsUserModalOpen(false)}
+        />
+      )}
 
     </div>
   );

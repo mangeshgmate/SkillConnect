@@ -142,7 +142,7 @@ const Hackathon = () => {
               <div className="flex gap-2 p-2">
                 <button
                   onClick={() => navigate(`/discover/${event._id}`)}
-                  className="flex-1 border border-primary py-2 hover:bg-primary"
+                  className="bg-primary text-black px-3 py-1 rounded font-semibold"
                 >
                   Register
                 </button>

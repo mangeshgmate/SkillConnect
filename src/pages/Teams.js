@@ -90,7 +90,7 @@ const Discover = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-console.log("hackathonId at submit:", hackathonId);
+    console.log("hackathonId at submit:", hackathonId);
 
     if (!currentUser) {
       alert("You must be logged in.");
@@ -165,6 +165,39 @@ console.log("hackathonId at submit:", hackathonId);
     });
   };
 
+  const [hackathonData, setHackathonData] = useState(null);
+
+  useEffect(() => {
+    if (!hackathonId) return;
+    fetch(`http://localhost:5000/api/hackathons/${hackathonId}`)
+      .then(res => res.json())
+      .then(data => setHackathonData(data.data))
+      .catch(err => console.error(err));
+  }, [hackathonId]);
+
+  useEffect(() => {
+    if (hackathonData) {
+      setFormData(prev => ({
+        ...prev,
+        maxMembers: hackathonData.maxTeamSize || 4,
+      }));
+    }
+  }, [hackathonData]);
+
+  // Add this guard
+  if (!hackathonId) {
+    return (
+      <div className="flex flex-col items-center justify-center mt-20 text-white gap-3">
+        <p className="text-gray-400 text-sm">
+          You must register for a hackathon before creating or joining a team.
+        </p>
+        <a href="/explore-hackathons" className="bg-primary text-black px-4 py-2 rounded font-semibold hover:opacity-80">
+          Browse Hackathons
+        </a>
+      </div>
+    );
+  }
+
 
   return (
     <>
@@ -215,10 +248,9 @@ console.log("hackathonId at submit:", hackathonId);
 
                 <input
                   type="number"
-                  placeholder="Max Members"
                   value={formData.maxMembers}
-                  onChange={(e) => setFormData(prev => ({ ...prev, maxMembers: e.target.value }))}
-                  className="w-full p-2 rounded mb-3 bg-base border-b border-muted"
+                  readOnly
+                  className="w-full p-2 rounded mb-3 bg-base border-b border-muted opacity-60 cursor-not-allowed"
                 />
 
                 <select
@@ -294,7 +326,31 @@ console.log("hackathonId at submit:", hackathonId);
                     </div>
 
                     {/* Invite Button */}
-                    <button className="ml-2 bg-primary btn-small text-black px-3 py-1 rounded font-semibold hover:opacity-80">
+                    <button
+                      disabled={!currentUser}
+                      onClick={async () => {
+                        if (!currentUser) return;
+
+                        console.log("currentUser full object:", currentUser);
+                        console.log("Sending:", {
+                          fromUserId: currentUser._id,
+                          fromUserName: currentUser.name,
+                          toUserId: user._id
+                        });
+
+                        await fetch("http://localhost:5000/api/request/send", {
+                          method: "POST",
+                          headers: { "Content-Type": "application/json" },
+                          body: JSON.stringify({
+                            fromUserId: currentUser._id.toString(),   
+                            fromUserName: currentUser.name,
+                            toUserId: user._id.toString()             
+                          })
+                        });
+                        alert(`Invite sent to ${user.name}`);
+                      }}
+                      className="ml-2 bg-primary text-black px-3 py-1 rounded font-semibold hover:opacity-80 disabled:opacity-40"
+                    >
                       Invite
                     </button>
                   </div>
@@ -313,34 +369,57 @@ console.log("hackathonId at submit:", hackathonId);
                   key={t._id}
                   className="flex items-center bg-base border border-muted rounded-lg p-3 w-[90%] max-w-[500px] shadow-md text-white mb-3"
                 >
-
                   {/* Team Icon */}
-                  <div className="w-14 h-14 rounded-full bg-primary flex items-center justify-center text-black font-bold mr-4">
+                  <div className="w-14 h-14 rounded-full bg-primary flex items-center justify-center text-black font-bold mr-4 shrink-0">
                     {t.teamName?.charAt(0)}
                   </div>
 
                   {/* Team Info */}
                   <div className="flex flex-col flex-1">
-                    <h3 className="font-bold text-lg">{t.teamName}</h3>
-                    <p className="text-sm text-gray-400">{t.description}</p>
+                    <div className="flex items-center justify-between">
+                      <h3 className="font-bold text-lg">{t.teamName}</h3>
 
-                    {/* Skills */}
-                    <div className="flex flex-wrap gap-1 mt-2">
-                      {t.requiredSkills?.map((tech, i) => (
-                        <span
-                          key={i}
-                          className="text-xs bg-surface text-black px-2 py-1 rounded"
-                        >
-                          {tech}
-                        </span>
-                      ))}
+                      {/* Vacancy Badge */}
+                      <span className={`text-xs px-2 py-1 rounded font-semibold ${(t.maxMembers - (t.members?.length || 1)) > 0
+                        ? "bg-green-500 text-black"
+                        : "bg-red-500 text-white"
+                        }`}>
+                        {t.maxMembers - (t.members?.length || 1) > 0
+                          ? `${t.maxMembers - (t.members?.length || 1)} spot${t.maxMembers - (t.members?.length || 1) > 1 ? "s" : ""} left`
+                          : "Full"}
+                      </span>
                     </div>
+
+                    <p className="text-sm text-gray-400 mt-1">{t.description}</p>
+
+                    {/* Members count */}
+                    <p className="text-xs text-gray-500 mt-1">
+                      {t.members?.length || 1} / {t.maxMembers} members
+                    </p>
+
+                    {/* Required Skills */}
+                    {t.requiredSkills?.length > 0 && (
+                      <div className="mt-2">
+                        <p className="text-xs text-gray-400 mb-1">Required Skills:</p>
+                        <div className="flex flex-wrap gap-1">
+                          {t.requiredSkills?.map((tech, i) => (
+                            <span
+                              key={i}
+                              className="text-xs bg-primary text-black px-2 py-1 rounded font-medium"
+                            >
+                              {tech}
+                            </span>
+                          ))}
+                        </div>
+                      </div>
+                    )}
                   </div>
 
-                  {/* Join Button */}
+                  {/* Join Button — disabled if full */}
                   <button
                     onClick={() => handleJoinTeam(t._id)}
-                    className="ml-3 bg-primary text-black px-3 py-1 rounded font-semibold"
+                    disabled={t.maxMembers - (t.members?.length || 1) <= 0}
+                    className="ml-3 bg-primary text-black px-3 py-1 rounded font-semibold disabled:opacity-40 disabled:cursor-not-allowed shrink-0"
                   >
                     Join
                   </button>

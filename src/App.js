@@ -15,36 +15,30 @@ import RegistrationPage from './pages/RegistrationPage';
 import About from './pages/About';
 import Contact from './pages/Contact';
 
-import { BrowserRouter as Router, Routes, Route, Navigate, useNavigate } from 'react-router-dom';
-
+import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 
 function App() {
-  const [user, setUser] = useState(null);
-  //const navigate = useNavigate();
+  // ← CHANGE 1: Initialize from localStorage so refresh doesn't reset user to null
+  const [user, setUser] = useState(() => JSON.parse(localStorage.getItem("user")));
+
   const ProtectedRoute = ({ user, children }) => {
     return user ? children : <Navigate to="/login" replace />;
   }
+
   return (
     <>
       <div>
-
         <Router>
           <Layout>
             <Routes>
 
-              {/* <Route path="/" element={<Navigate to="/login" />} />
-        <Route path="/login" element={<Login />} />
-        <Route path="/register" element={<Register />} /> */}
-
               <Route path="/" element={<Home />} />
+
+              {/* CHANGE 2: pass full user object not just name */}
               <Route path="/login" element={<Login setUser={setUser} />} />
               <Route path="/register" element={<Register />} />
 
-
-              <Route path="/hackathon-register" element={
-                <ProtectedRoute user={user}>
-                  <Discover />
-                </ProtectedRoute>} />
+              <Route path="/hackathon-register" element={<Navigate to="/explore-hackathons" replace />} />
 
               <Route path="/profile" element={
                 <ProtectedRoute user={user}>
@@ -66,8 +60,7 @@ function App() {
                 <ProtectedRoute user={user}>
                   <Login />
                 </ProtectedRoute>
-              }
-              />
+              } />
 
               <Route path="/team" element={
                 <ProtectedRoute user={user}>
@@ -75,14 +68,13 @@ function App() {
                 </ProtectedRoute>
               } />
 
-
               <Route path="/about" element={<About />} />
               <Route path="/contact" element={<Contact />} />
               <Route path='/explore-hackathons' element={<Hackathon />} />
+
             </Routes>
           </Layout>
         </Router>
-
       </div>
     </>
   );

@@ -297,39 +297,27 @@ app.post("/api/login", async (req, res) => {
     const { email, password } = req.body;
 
     if (!email || !password) {
-      return res.status(400).json({
-        success: false,
-        message: "Email and password required"
-      });
+      return res.status(400).json({ success: false, message: "Email and password required" });
     }
 
-    const user = await usersCollection.findOne({
-      email,
-      password
-    });
+    const user = await usersCollection.findOne({ email, password });
 
     if (user) {
       return res.status(200).json({
         success: true,
         message: "Login successful",
         user: {
-          _id: user._id,
+          _id: user._id.toString(),   // ← THIS is the fix
           name: user.name,
           email: user.email
         }
       });
     }
 
-    return res.status(401).json({
-      success: false,
-      message: "Invalid credentials"
-    });
+    return res.status(401).json({ success: false, message: "Invalid credentials" });
   } catch (error) {
     console.error(error);
-    res.status(500).json({
-      success: false,
-      message: "Server error"
-    });
+    res.status(500).json({ success: false, message: "Server error" });
   }
 });
 
@@ -429,48 +417,79 @@ app.get("/api/teams", async (req, res) => {
   }
 });
 
+app.post("/api/request/respond", async (req, res) => {
+  try {
+    const { requestId, action, notificationId } = req.body; // action: "accept" | "reject"
+
+    // Update request status
+    await requestsCollection.updateOne(
+      { _id: new ObjectId(requestId) },
+      { $set: { status: action === "accept" ? "accepted" : "rejected" } }
+    );
+
+    // Delete the notification after responding
+    await notificationsCollection.deleteOne({
+      _id: new ObjectId(notificationId)
+    });
+
+    res.json({ success: true, action });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+});
+
 app.post("/api/request/send", async (req, res) => {
-  const { fromUserId, toUserId } = req.body;
+  try {
+    const { fromUserId, toUserId, fromUserName } = req.body;
 
-  // 1. Save request
-  await requestsCollection.insertOne({
-    fromUserId,
-    toUserId,
-    type: "connection",
-    status: "pending",
-    createdAt: new Date()
-  });
+    // Guard against missing fields
+    if (!fromUserId || !toUserId || !fromUserName) {
+      return res.status(400).json({
+        success: false,
+        message: `Missing fields: ${!fromUserId ? 'fromUserId ' : ''}${!toUserId ? 'toUserId ' : ''}${!fromUserName ? 'fromUserName' : ''}`
+      });
+    }
 
-  // 2. Create notification
-  await notificationsCollection.insertOne({
-    userId: toUserId,
-    message: "You have a new connection request",
-    isRead: false,
-    createdAt: new Date()
-  });
+    const request = await requestsCollection.insertOne({
+      fromUserId: fromUserId.toString(),
+      toUserId: toUserId.toString(),
+      type: "connection",
+      status: "pending",
+      createdAt: new Date()
+    });
 
-  res.json({ success: true });
+    await notificationsCollection.insertOne({
+      toUserId: toUserId.toString(),        // ← always store as string
+      message: `${fromUserName} wants to connect with you`,
+      type: "connection_request",
+      requestId: request.insertedId,
+      fromUserId: fromUserId.toString(),
+      fromUserName,
+      isRead: false,
+      createdAt: new Date()
+    });
+
+    res.json({ success: true });
+  } catch (err) {
+    console.error("Send request error:", err.message);
+    res.status(500).json({ success: false, message: err.message });
+  }
 });
 
 app.get("/api/notifications/:userId", async (req, res) => {
   try {
     const { userId } = req.params;
+    console.log("Fetching notifications for userId:", userId);
 
     const notifications = await notificationsCollection
-      .find({ toUserId: userId })
+      .find({ toUserId: userId.toString() })  // match as string
+      .sort({ createdAt: -1 })
       .toArray();
 
-    res.json({
-      success: true,
-      data: notifications
-    });
-
+    console.log("Found:", notifications.length);
+    res.json({ success: true, data: notifications });
   } catch (err) {
-    console.error(err);
-    res.status(500).json({
-      success: false,
-      message: "Error fetching notifications"
-    });
+    res.status(500).json({ success: false, message: err.message });
   }
 });
 

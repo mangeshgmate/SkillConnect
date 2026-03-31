@@ -24,8 +24,6 @@ const Profile = () => {
   if (loading) return <p className="text-white p-6">Loading profile...</p>;
   if (!user) return <p className="text-white p-6">No user found. Please log in.</p>;
 
-  // rest of your return JSX stays exactly the same
-
   return (
     <div className="p-6 text-white max-w-6xl mx-auto font-primary">
 
