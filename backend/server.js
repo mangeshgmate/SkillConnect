@@ -479,14 +479,12 @@ app.post("/api/request/send", async (req, res) => {
 app.get("/api/notifications/:userId", async (req, res) => {
   try {
     const { userId } = req.params;
-    console.log("Fetching notifications for userId:", userId);
 
     const notifications = await notificationsCollection
       .find({ toUserId: userId.toString() })  // match as string
       .sort({ createdAt: -1 })
       .toArray();
 
-    console.log("Found:", notifications.length);
     res.json({ success: true, data: notifications });
   } catch (err) {
     res.status(500).json({ success: false, message: err.message });
@@ -579,6 +577,50 @@ app.post("/api/hackathons/:id/register", async (req, res) => {
     res.json({ success: true, message: "Registered for hackathon" });
   } catch (err) {
     console.error("Register error:", err.message);
+    res.status(500).json({ success: false, message: err.message });
+  }
+});
+
+// Add this in server.js
+app.get("/api/connections/:userId", async (req, res) => {
+  try {
+    const { userId } = req.params;
+
+    // Find all accepted requests involving this user
+    const accepted = await requestsCollection.find({
+      status: "accepted",
+      $or: [
+        { fromUserId: userId },
+        { toUserId: userId }
+      ]
+    }).toArray();
+
+    // Extract the other person's ID from each connection
+    const connectedUserIds = accepted.map(req =>
+      req.fromUserId === userId ? req.toUserId : req.fromUserId
+    );
+
+    // Fetch their user documents
+    const connections = await usersCollection.find({
+      _id: { $in: connectedUserIds.map(id => new ObjectId(id)) }
+    }).toArray();
+
+    res.json({ success: true, data: connections });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+});
+app.get("/api/requests/pending/:userId", async (req, res) => {
+  try {
+    const { userId } = req.params;
+
+    const pending = await requestsCollection.find({
+      fromUserId: userId,
+      status: "pending"
+    }).toArray();
+
+    res.json({ success: true, data: pending });
+  } catch (err) {
     res.status(500).json({ success: false, message: err.message });
   }
 });

@@ -1,6 +1,4 @@
 import Navbar from './components/Navbar';
-import SideProfile from './components/SideProfile';
-import CreatePost from './components/CreatePost';
 import Login from './pages/Login';
 import Register from './pages/Register';
 import Home from './pages/Home';
@@ -11,7 +9,6 @@ import { useState } from 'react';
 import Profile from './pages/Profile';
 import Explore from './pages/Explore';
 import Hackathon from './pages/Hackathon';
-import RegistrationPage from './pages/RegistrationPage';
 import About from './pages/About';
 import Contact from './pages/Contact';
 

@@ -51,7 +51,7 @@ export default function Login({ setUser }) {
   return (
     <>
       {/* Login content sits inside Layout's <children> slot */}
-      <div className="flex items-center justify-center px-4 py-16">
+      <div className="flex items-center justify-center px-4 pb-16">
         <div className="w-full max-w-[420px]">
 
           {/* Header */}
