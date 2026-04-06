@@ -294,7 +294,15 @@ export default function Register() {
               Sign in here
             </Link>
           </p>
-
+          <div className="mt-6 p-4 border-t border-gray-700 w-full text-center">
+        <p>Want to host a hackathon?</p>
+        <button 
+          onClick={() => navigate("/host-registration")}
+          className="text-primary font-bold underline"
+        >
+          Click here for Host Registration
+        </button>
+      </div>          
         </div>
       </div>
     </div>

@@ -12,7 +12,7 @@ export default function Navbar() {
   const [user, setUser] = useState(null);
 
   const navigate = useNavigate();
-
+  
   const menuItems = [
     { name: "My Profile", path: "/profile" },
     { name: "Settings", path: "/settings" },
@@ -38,7 +38,10 @@ export default function Navbar() {
   useEffect(() => {
     const syncUser = () => {
       const storedUser = JSON.parse(localStorage.getItem("user"));
-      setUser(storedUser);
+      const storedHost = JSON.parse(localStorage.getItem("hostUser"));
+      // You can store them in one state or separate ones. 
+    // Let's create a combined 'isLoggedIn' check.
+    setUser(storedUser || storedHost);
     };
 
     // Run once on mount
@@ -109,9 +112,14 @@ export default function Navbar() {
         {/* Desktop Menu */}
         <ul className="hidden md:flex gap-8 font-primary text-sm">
           <li><Link to="/" className="hover:text-primary transition">HOME</Link></li>
-          <li><Link to="/explore" className="hover:text-primary transition">EXPLORE</Link></li>
+          <li><Link to="/explore" className="hover:text-primary transition">Connect</Link></li>
           <li><Link to="/explore-hackathons" className="hover:text-primary transition">HACKATHONS</Link></li>
-          <li><Link to="/host" className="hover:text-primary transition">HOST</Link></li>
+          {!user && (
+          <>
+          <li><Link to="/login" className="hover:text-primary transition">Login</Link></li>
+          <li><Link to="/host" className="hover:text-primary transition">Host</Link></li>
+          </>
+          )}
         </ul>
 
         {/* Right Section */}
@@ -226,9 +234,10 @@ export default function Navbar() {
       {menuOpen && (
         <div className="md:hidden bg-base text-white p-4 flex flex-col gap-4 font-primary text-sm border-b border-muted/20">
           <Link to="/" onClick={() => setMenuOpen(false)}>HOME</Link>
-          <Link to="/explore" onClick={() => setMenuOpen(false)}>EXPLORE</Link>
+          <Link to="/explore" onClick={() => setMenuOpen(false)}>Connect</Link>
           <Link to="/explore-hackathons" onClick={() => setMenuOpen(false)}>HACKATHONS</Link>
-          <Link to="/host" onClick={() => setMenuOpen(false)}>HOST</Link>
+          <Link to="/login" onClick={() => setMenuOpen(false)}>Login</Link>
+          <Link to="/host" onClick={() => setMenuOpen(false)}>host</Link>
         </div>
       )}
 

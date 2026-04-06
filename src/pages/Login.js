@@ -145,8 +145,6 @@ export default function Login({ setUser }) {
               {[
                 { icon: <FaGithub />, label: "GitHub" },
                 { icon: <FaGoogle />, label: "Google" },
-                { icon: <FaLinkedin />, label: "LinkedIn" },
-                { icon: <FaFacebook />, label: "Facebook" },
               ].map(({ icon, label }) => (
                 <button
                   key={label}
