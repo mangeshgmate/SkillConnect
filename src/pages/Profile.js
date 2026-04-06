@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 import React, { useState, useEffect } from "react";
 
 const Profile = () => {
@@ -164,3 +165,18 @@ const Profile = () => {
 };
 
 export default Profile;
+=======
+import React from 'react'
+
+const Profile = () => {
+  return (
+    <div>
+      <h1>
+            This is profile page
+        </h1>
+    </div>
+  )
+}
+
+export default Profile
+>>>>>>> a51493c67f89740527f8b6f582e697742321a478
